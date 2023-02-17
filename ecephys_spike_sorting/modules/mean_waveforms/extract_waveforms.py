@@ -122,18 +122,24 @@ def extract_waveforms(raw_data,
                     if rawWaveform.shape[1] == samples_per_spike:
                         waveforms[wv_idx, :, :] = rawWaveform * bit_volts
 
+
+                # split up metrics calculation and concat to get more
+                # informative error message if a failure occurs (whcih has been
+                # seen in some rare cases)
+                wf_metrics = calculate_waveform_metrics(waveforms[:total_waveforms, :, :],
+                                                         cluster_id,
+                                                         peak_channels[cluster_idx],
+                                                         channel_map,
+                                                         sample_rate,
+                                                         upsampling_factor,
+                                                         spread_threshold,
+                                                         site_range,
+                                                         site_spacing,
+                                                         epoch.name
+                                                         )
+
                 # concatenate to existing dataframe
-                metrics = pd.concat([metrics, calculate_waveform_metrics(waveforms[:total_waveforms, :, :],
-                                                                         cluster_id, 
-                                                                         peak_channels[cluster_idx], 
-                                                                         channel_map,
-                                                                         sample_rate, 
-                                                                         upsampling_factor,
-                                                                         spread_threshold,
-                                                                         site_range,
-                                                                         site_spacing,
-                                                                         epoch.name
-                                                                         )])
+                metrics = pd.concat([metrics, wf_metrics])
 
                 with warnings.catch_warnings():
 

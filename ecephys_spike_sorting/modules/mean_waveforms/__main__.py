@@ -14,13 +14,23 @@ from .waveform_metrics import calculate_waveform_metrics
 def calculate_mean_waveforms(args):
 
     print('ecephys spike sorting: mean waveforms module')
-    
+
     start = time.time()
 
     print("Loading data...")
 
     rawData = np.memmap(args['ephys_params']['ap_band_file'], dtype='int16', mode='r')
-    data = np.reshape(rawData, (int(rawData.size/args['ephys_params']['num_channels']), args['ephys_params']['num_channels']))
+
+    # reference channels may have been removed, in which case args['ephys_params']['num_channels'] needs to be corrected
+    if (rawData.size % args['ephys_params']['num_channels']) == 0:
+        data = np.reshape(rawData, (int(rawData.size/args['ephys_params']['num_channels']), args['ephys_params']['num_channels']))
+    else:
+        nc = args['ephys_params']['num_channels'] - len(args['ephys_params']['reference_channels'])
+        if (rawData.size % mc) == 0:
+            data = np.reshape(rawData, (int(rawData.size/nc), nc))
+            args['ephys_params']['num_channels'] = nc
+        else:
+            raise RuntimeError(f"Data contained in \"{args['ephys_params']['ap_band_file']}\" cannot be reshaped to a time x channels matrix")
 
     spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality = \
             load_kilosort_data(args['directories']['kilosort_output_directory'], \
@@ -45,7 +55,7 @@ def calculate_mean_waveforms(args):
 
     print('total time: ' + str(np.around(execution_time,2)) + ' seconds')
     print()
-    
+
     return {"execution_time" : execution_time} # output manifest
 
 

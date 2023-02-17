@@ -37,23 +37,26 @@ def calculate_quality_metrics(args):
             pc_features = None
             pc_feature_ind = None
 
-        metrics = calculate_metrics(spike_times, 
-            spike_clusters, 
+        metrics = calculate_metrics(spike_times,
+            spike_clusters,
             spike_templates,
-            amplitudes, 
-            channel_map, 
-            pc_features, 
-            pc_feature_ind, 
+            amplitudes,
+            channel_map,
+            pc_features,
+            pc_feature_ind,
             args['quality_metrics_params'])
-    
-    except FileNotFoundError:
-        
+
+    except FileNotFoundError as err:
+
         execution_time = time.time() - start
 
         print(" Files not available.")
 
+        # give the user a bit more information about the error
+        print(" Eror msg: ", err)
+
         return {"execution_time" : execution_time,
-            "quality_metrics_output_file" : None} 
+            "quality_metrics_output_file" : None}
 
     output_file = args['quality_metrics_params']['quality_metrics_output_file']
 

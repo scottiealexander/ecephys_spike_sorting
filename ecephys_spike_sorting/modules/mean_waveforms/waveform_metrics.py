@@ -144,16 +144,16 @@ def calculate_waveform_duration(waveform, timestamps):
 
     # to avoid detecting peak before trough
     if waveform[peak_idx] > np.abs(waveform[trough_idx]):
-        duration =  timestamps[peak_idx:][np.where(waveform[peak_idx:]==np.min(waveform[peak_idx:]))[0][0]] - timestamps[peak_idx] 
+        duration =  timestamps[peak_idx:][np.where(waveform[peak_idx:]==np.min(waveform[peak_idx:]))[0][0]] - timestamps[peak_idx]
     else:
-        duration =  timestamps[trough_idx:][np.where(waveform[trough_idx:]==np.max(waveform[trough_idx:]))[0][0]] - timestamps[trough_idx] 
+        duration =  timestamps[trough_idx:][np.where(waveform[trough_idx:]==np.max(waveform[trough_idx:]))[0][0]] - timestamps[trough_idx]
 
     return duration * 1e3
 
 
 def calculate_waveform_halfwidth(waveform, timestamps):
-    
-    """ 
+
+    """
     Spike width (in seconds) at half max amplitude
 
     Inputs:

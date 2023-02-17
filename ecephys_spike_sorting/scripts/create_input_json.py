@@ -1,4 +1,4 @@
-import os, io, json, glob, sys
+import os, io, json, re, sys
 
 if sys.platform == 'linux':
     import pwd
@@ -55,10 +55,19 @@ def createInputJson(output_file,
         kilosort_output_directory = os.path.join(extracted_data_directory, 'continuous', 'Neuropix-' + acq_system + '-100.0')
 
     if kilosort_output_tmp is None:
-        kilosort_output_tmp = r"C:\data\kilosort" #kilosort_output_directory
+        kilosort_output_tmp = kilosort_output_directory
 
     if continuous_file is None:
-        continuous_file = os.path.join(kilosort_output_directory, 'continuous.dat')
+        # don't assume a particular file name, locate any .dat file present
+        files = [os.path.join(kilosort_output_directory, f) for f in os.listdir(kilosort_output_directory) if re.match(r".*\.dat", f)]
+
+        if len(files) == 1:
+            continuous_file = files[0]
+        else:
+            raise RuntimeError(("Multiple \".dat\" files exist in "
+                f"{kilosort_output_directory}, please specify a filepath using"
+                " the <continuous_file> argument")
+                )
 
     dictionary = \
     {
