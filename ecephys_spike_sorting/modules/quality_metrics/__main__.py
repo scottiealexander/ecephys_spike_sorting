@@ -11,6 +11,37 @@ from ...common.epoch import get_epochs_from_nwb_file
 
 from .metrics import calculate_metrics
 
+# allow fallback to not include pc features if a FileNotFoundError is raised
+# see: https://github.com/AllenInstitute/ecephys_spike_sorting/pull/58
+def load_data_wrapper(args):
+    if args['quality_metrics_params']['include_pc_metrics']:
+        try:
+
+            spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality, pc_features, pc_feature_ind = \
+                load_kilosort_data(args['directories']['kilosort_output_directory'], \
+                    args['ephys_params']['sample_rate'], \
+                    use_master_clock = False,
+                    include_pcs = True)
+
+        except FileNotFoundError as err:
+            # probably the user meant to set <incoude_pc_metrics> to false, as
+            # pc_features.npy is not saved in KS3
+            print("    [WARNING]: FileNotFoundError caught, attempting to load data w/o pc_features")
+            args['quality_metrics_params']['include_pc_metrics'] = False
+
+    if not args['quality_metrics_params']['include_pc_metrics']:
+
+        spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality = \
+            load_kilosort_data(args['directories']['kilosort_output_directory'], \
+                args['ephys_params']['sample_rate'], \
+                use_master_clock = False,
+                include_pcs = False)
+
+        pc_features = None
+        pc_feature_ind = None
+
+    return spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality, pc_features, pc_feature_ind
+
 
 def calculate_quality_metrics(args):
 
@@ -21,21 +52,9 @@ def calculate_quality_metrics(args):
     print("Loading data...")
 
     try:
-        if args['quality_metrics_params']['include_pc_metrics']:
-            spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality, pc_features, pc_feature_ind = \
-                load_kilosort_data(args['directories']['kilosort_output_directory'], \
-                    args['ephys_params']['sample_rate'], \
-                    use_master_clock = False,
-                    include_pcs = True)
-        else:
-            spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality = \
-                load_kilosort_data(args['directories']['kilosort_output_directory'], \
-                    args['ephys_params']['sample_rate'], \
-                    use_master_clock = False,
-                    include_pcs = False)
 
-            pc_features = None
-            pc_feature_ind = None
+        spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, clusterIDs, cluster_quality, pc_features, pc_feature_ind = \
+            load_data_wrapper(args)
 
         metrics = calculate_metrics(spike_times,
             spike_clusters,
@@ -53,7 +72,7 @@ def calculate_quality_metrics(args):
         print(" Files not available.")
 
         # give the user a bit more information about the error
-        print(" Eror msg: ", err)
+        print(" Error msg: ", err)
 
         return {"execution_time" : execution_time,
             "quality_metrics_output_file" : None}
