@@ -26,7 +26,7 @@ def calculate_mean_waveforms(args):
         data = np.reshape(rawData, (int(rawData.size/args['ephys_params']['num_channels']), args['ephys_params']['num_channels']))
     else:
         nc = args['ephys_params']['num_channels'] - len(args['ephys_params']['reference_channels'])
-        if (rawData.size % mc) == 0:
+        if (rawData.size % nc) == 0:
             data = np.reshape(rawData, (int(rawData.size/nc), nc))
             args['ephys_params']['num_channels'] = nc
         else:
